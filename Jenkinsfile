@@ -47,7 +47,7 @@ pipeline{
                 always {
                     step([$class: 'Mailer',
                         notifyEveryUnstableBuild: true,
-                        recipients: "ksahadeva9478@gmail.com",
+                        recipients: "jyothiprakashgangala@gmail.com",
                         sendToIndividuals: true])
                 }
             }     
