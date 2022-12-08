@@ -48,7 +48,7 @@ pipeline{
                     step([$class: 'Mailer',
                         notifyEveryUnstableBuild: true,
                         recipients: "jyothiprakashgangala@gmail.com",
-                        sendToIndividuals: true])
+                        endToIndividuals: true])
                 }
             }     
         }  
