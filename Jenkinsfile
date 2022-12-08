@@ -32,25 +32,14 @@ pipeline{
 
             }
         }
-        stage("success"){
-             steps {
-                script {
-                    currentBuild.result = 'SUCCESS'
-                }
-            }
-             post {
-                 failure {
-                      script {
-                         currentBuild.result = 'FAILURE'
-                    }
-                }
-                always {
-                    step([$class: 'Mailer',
-                        notifyEveryUnstableBuild: true,
-                        recipients: "jyothiprakashgangala@gmail.com",
-                        endToIndividuals: true])
-                }
-            }     
-        }  
+         post{
+           changed{
+              mail to: "techcomsdevops@gmail.com",
+              subject: "jenkins build:${currentBuild.currentResult}: ${env.JOB_NAME}",
+              body: "${currentBuild.currentResult}: Job ${env.JOB_NAME}\nMore Info can be found here: ${env.BUILD_URL}"
+              ${BUILD_LOG_REGEX, regex="^.*?BUILD FAILED.*?$", linesBefore=0, linesAfter=10, maxMatches=5, showTruncatedLines=false, escapeHtml=true}
+
+         }
+       }
     }
 } 
