@@ -1,6 +1,6 @@
 pipeline{
     agent any
-      environments {
+     environment {
         DOCKERHUB_REPO = "techcoms/backend-springboot-maven-war"
     }
     tools{
