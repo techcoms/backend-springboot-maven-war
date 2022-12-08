@@ -1,6 +1,6 @@
 pipeline{
     agent any
-     environment {
+    environments {
         DOCKERHUB_REPO = "techcoms/backend-springboot-maven-war"
     }
     tools{
@@ -31,6 +31,26 @@ pipeline{
                    }
 
             }
-        }     
+        }
+        stage("success"){
+             steps {
+                script {
+                    currentBuild.result = 'SUCCESS'
+                }
+            }
+             post {
+                 failure {
+                      script {
+                         currentBuild.result = 'FAILURE'
+                    }
+                }
+                always {
+                    step([$class: 'Mailer',
+                        notifyEveryUnstableBuild: true,
+                        recipients: "jyothiprakashgangala@gmail.com",
+                        sendToIndividuals: true])
+                }
+            }     
+        }  
     }
-}
+} 
