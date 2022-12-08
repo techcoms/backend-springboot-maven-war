@@ -32,7 +32,7 @@ pipeline{
 
             }
         }
-    post{
+     post{
         changed{
             mail to: "techcomsdevops@gmail.com",
             subject: "jenkins build:${currentBuild.currentResult}: ${env.JOB_NAME}",
