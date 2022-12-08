@@ -30,7 +30,8 @@ pipeline{
   
                    }
 
-            }
+               }
+           }
         }
      post{
         changed{
@@ -40,5 +41,4 @@ pipeline{
            '${BUILD_LOG_REGEX, regex="^The module", maxMatches=5, showTruncatedLines=false, escapeHtml=true}'
          }
        }
-    }
-}    
+ }    
