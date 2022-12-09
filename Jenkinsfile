@@ -4,7 +4,8 @@ pipeline{
   }
     agent any
     environment {
-        DOCKERHUB_REPO = "techcoms/backend-springboot-maven-war"
+        ECR_REGISTRY = "894228636591.dkr.ecr.ap-south-1.amazonaws.com/backend-springboot-maven-war"
+        ECR_ACCOUNT_ID = "894228636591.dkr.ecr.ap-south-1.amazonaws.com"
         GITHUB_URL = "${params.url}"
         BRANCH = "${params.branch}"
     }
@@ -29,11 +30,8 @@ pipeline{
         }
         stage("login to dockerhub and push image"){
             steps { 
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) { 
-                    sh "docker login -u $USERNAME -p $PASSWORD "
-                    sh "docker push ${DOCKERHUB_REPO}:${BUILD_NUMBER}"
-  
-                      }
+                  sh "aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${ECR_ACCOUNT_ID}"
+                  sh "docker push ${ECR_REGISTRY}:${${BUILD_NUMBER}}"
                   }
              }  
         }
