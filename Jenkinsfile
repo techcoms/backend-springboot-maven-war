@@ -27,6 +27,11 @@ pipeline{
                 sh "docker build -t ${DOCKERHUB_REPO}:${BUILD_NUMBER} ."
             }
         }
+         stage('run a docker container'){
+                steps{
+                   sh "docker run -d -p 8083:8080 ${DOCKERHUB_REPO}:${BUILD_NUMBER}"
+                }
+          }
         stage("login to dockerhub and push image"){
             steps { 
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) { 
