@@ -9,7 +9,7 @@ pipeline{
         BRANCH = "${params.branch}"
         NEXUS_VERSION = "nexus3"
         NEXUS_PROTOCOL = "http"
-        NEXUS_URL = "43.205.212.143:8081"
+        NEXUS_URL = "43.205.142.186:8081"
         NEXUS_REPOSITORY = "backend-springboot-maven-war"
         NEXUS_CREDENTIAL_ID = "nexusrepo"
     }
@@ -69,7 +69,7 @@ pipeline{
         }
          stage('run a docker container'){
                 steps{
-                   sh "docker run -d -p 8083:8080 ${DOCKERHUB_REPO}:${BUILD_NUMBER}"
+//                    sh "docker run -d -p 8083:8080 ${DOCKERHUB_REPO}:${BUILD_NUMBER}"
                 }
           }
         stage("login to dockerhub and push image"){
