@@ -69,7 +69,7 @@ pipeline{
         }
          stage('run a docker container'){
                 steps{
-//                    sh "docker run -d -p 8083:8080 ${DOCKERHUB_REPO}:${BUILD_NUMBER}"
+                   sh "docker run -d -p 8083:8080 ${DOCKERHUB_REPO}:${BUILD_NUMBER}"
                 }
           }
         stage("login to dockerhub and push image"){
