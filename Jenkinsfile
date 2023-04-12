@@ -14,7 +14,7 @@ pipeline{
         NEXUS_CREDENTIAL_ID = "nexusrepo"
     }
     tools{
-        maven "maven-3.8.6"
+        maven "maven-3.9.1"
     }
     stages{
         stage("git checkout"){
