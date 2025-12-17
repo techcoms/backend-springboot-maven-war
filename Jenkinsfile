@@ -1,12 +1,7 @@
 pipeline{ 
-      options {
-    buildDiscarder(logRotator(numToKeepStr: '2', artifactNumToKeepStr: '6'))
-  }
     agent any
     environment {
         DOCKERHUB_REPO = "techcoms/backend-springboot-maven-war"
-        // GITHUB_URL = "${params.url}"
-        // BRANCH = "${params.branch}"
         NEXUS_VERSION = "nexus3"
         NEXUS_PROTOCOL = "http"
         NEXUS_URL = "13.235.62.16:8081"
@@ -90,9 +85,4 @@ pipeline{
             body: "${currentBuild.currentResult}: Job ${env.JOB_NAME}\nMore Info can be found here: ${env.BUILD_URL}"
         }
     }
-
 }
-
-
-
-
