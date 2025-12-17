@@ -5,21 +5,22 @@ pipeline{
     agent any
     environment {
         DOCKERHUB_REPO = "techcoms/backend-springboot-maven-war"
-        GITHUB_URL = "${params.url}"
-        BRANCH = "${params.branch}"
+        // GITHUB_URL = "${params.url}"
+        // BRANCH = "${params.branch}"
         NEXUS_VERSION = "nexus3"
         NEXUS_PROTOCOL = "http"
-        NEXUS_URL = "43.205.142.186:8081"
+        NEXUS_URL = "13.235.62.16:8081"
         NEXUS_REPOSITORY = "maven-snapshots"
         NEXUS_CREDENTIAL_ID = "nexusrepo"
     }
     tools{
-        maven"maven-3.9.1"
+        maven"maven-3.9.11"
     }
     stages{
         stage("git checkout"){
             steps{
-                  git branch: "${BRANCH}", credentialsId: 'github-creds', url: "${GITHUB_URL}"
+                  git branch: 'feature',
+                    url: 'https://github.com/techcoms/springboot-app'
             }
         }
         stage("build artifacts with maven"){
@@ -84,10 +85,11 @@ pipeline{
         }
      post{
         changed{
-            mail to: "techcomsdevops@gmail.com",
+            mail to: "jyothiprakashg05@gmail.com",
             subject: "jenkins build:${currentBuild.currentResult}: ${env.JOB_NAME}",
             body: "${currentBuild.currentResult}: Job ${env.JOB_NAME}\nMore Info can be found here: ${env.BUILD_URL}"
         }
     }
 
 }
+
