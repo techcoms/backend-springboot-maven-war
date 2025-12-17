@@ -19,7 +19,7 @@ pipeline{
     stages{
         stage("git checkout"){
             steps{
-                  git branch: 'feature', credentialsId: 'github-creds',
+                  git branch: 'Feature', credentialsId: 'github-creds',
                     url: 'https://github.com/techcoms/backend-springboot-maven-war.git'
             }
         }
@@ -92,6 +92,7 @@ pipeline{
     }
 
 }
+
 
 
 
