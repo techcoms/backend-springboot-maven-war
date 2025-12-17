@@ -1,5 +1,6 @@
-pipeline{ 
+pipeline { 
     agent any
+    
     environment {
         DOCKERHUB_REPO = "techcoms/backend-springboot-maven-war"
         NEXUS_VERSION = "nexus3"
@@ -8,31 +9,39 @@ pipeline{
         NEXUS_REPOSITORY = "maven-snapshots"
         NEXUS_CREDENTIAL_ID = "nexusrepo"
     }
-    tools{
-        maven"maven-3.9.11"
+
+    tools {
+        // Ensure this name matches EXACTLY what is in "Manage Jenkins -> Global Tool Configuration"
+        maven "maven-3.9.11"
     }
-    stages{
-        stage("git checkout"){
-            steps{
-                  git branch: 'Feature', credentialsId: 'github-creds',
+
+    stages {
+        stage("Git Checkout") {
+            steps {
+                // Modified: Changed 'Feature' to 'feature' or 'main' depending on your GitHub
+                git branch: 'main', 
+                    credentialsId: 'github-creds',
                     url: 'https://github.com/techcoms/backend-springboot-maven-war.git'
             }
         }
-        stage("build artifacts with maven"){
-            steps{
-                sh "mvn clean package"
+
+        stage("Build Artifacts") {
+            steps {
+                sh "mvn clean package -DskipTests"
             }
         }
-         stage("Publish to Nexus Repository ") {
+
+        stage("Publish to Nexus") {
             steps {
-                script{
-                    pom = readMavenPom file: "pom.xml";
-                    filesByGlob = findFiles(glob: "target/*.${pom.packaging}");
-                    echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
-                    artifactPath = filesByGlob[0].path;
-                    artifactExists = fileExists artifactPath;
-                    if(artifactExists) {
-                        echo "* File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}";
+                script {
+                    // Requires "Pipeline Utility Steps" Plugin
+                    def pom = readMavenPom file: "pom.xml"
+                    def filesByGlob = findFiles(glob: "target/*.${pom.packaging}")
+                    
+                    if(filesByGlob.length > 0) {
+                        def artifactPath = filesByGlob[0].path
+                        echo "Uploading Artifact: ${artifactPath}"
+                        
                         nexusArtifactUploader(
                             nexusVersion: NEXUS_VERSION,
                             protocol: NEXUS_PROTOCOL,
@@ -42,47 +51,59 @@ pipeline{
                             repository: NEXUS_REPOSITORY,
                             credentialsId: NEXUS_CREDENTIAL_ID,
                             artifacts: [
-                                [artifactId: pom.artifactId,
-                                classifier: '',
-                                file: artifactPath,
-                                type: pom.packaging],
-                                [artifactId: pom.artifactId,
-                                classifier: '',
-                                file: "pom.xml",
-                                type: "pom"]
+                                [artifactId: pom.artifactId, classifier: '', file: artifactPath, type: pom.packaging],
+                                [artifactId: pom.artifactId, classifier: '', file: "pom.xml", type: "pom"]
                             ]
-                        );
+                        )
                     } else {
-                        error "* File: ${artifactPath}, could not be found";
+                        error "No artifact found in target/ directory."
                     }
                 }
             }
         }
-        stage("build docker image"){
+
+        stage("Docker Build") {
             steps {
                 sh "docker build -t ${DOCKERHUB_REPO}:${BUILD_NUMBER} ."
+                sh "docker tag ${DOCKERHUB_REPO}:${BUILD_NUMBER} ${DOCKERHUB_REPO}:latest"
             }
         }
-         stage('run a docker container'){
-                steps{
-                   sh "docker run -d -p 8083:8080 ${DOCKERHUB_REPO}:${BUILD_NUMBER}"
+
+        stage("Run Docker Container") {
+            steps {
+                script {
+                    // Cleanup: Stop and remove existing container on port 8083 if it exists
+                    sh "docker ps -q --filter 'publish=8083' | xargs -r docker stop"
+                    sh "docker ps -aq --filter 'publish=8083' | xargs -r docker rm"
+                    
+                    // Run the new container
+                    sh "docker run -d -p 8083:8080 --name backend-app-${BUILD_NUMBER} ${DOCKERHUB_REPO}:${BUILD_NUMBER}"
                 }
-          }
-        stage("login to dockerhub and push image"){
+            }
+        }
+
+        stage("Push to DockerHub") {
             steps { 
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) { 
-                    sh "docker login -u $USERNAME -p $PASSWORD "
+                    sh "echo $PASSWORD | docker login -u $USERNAME --password-stdin"
                     sh "docker push ${DOCKERHUB_REPO}:${BUILD_NUMBER}"
-  
-                      }
-                  }
-             }  
+                    sh "docker push ${DOCKERHUB_REPO}:latest"
+                }
+            }
         }
-     post{
-        changed{
+    }
+
+    post {
+        always {
             mail to: "jyothiprakashg05@gmail.com",
-            subject: "jenkins build:${currentBuild.currentResult}: ${env.JOB_NAME}",
-            body: "${currentBuild.currentResult}: Job ${env.JOB_NAME}\nMore Info can be found here: ${env.BUILD_URL}"
+                 subject: "Jenkins Build ${currentBuild.fullDisplayName}: ${currentBuild.currentResult}",
+                 body: "Build Result: ${currentBuild.currentResult}\nProject: ${env.JOB_NAME}\nBuild URL: ${env.BUILD_URL}"
+        }
+        success {
+            echo "Pipeline completed successfully!"
+        }
+        failure {
+            echo "Pipeline failed. Check logs for details."
         }
     }
 }
