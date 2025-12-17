@@ -19,7 +19,7 @@ pipeline{
     stages{
         stage("git checkout"){
             steps{
-                  git branch: 'feature',
+                  git branch: 'feature', credentialsId: 'github-creds',
                     url: 'https://github.com/techcoms/springboot-app'
             }
         }
@@ -92,4 +92,5 @@ pipeline{
     }
 
 }
+
 
