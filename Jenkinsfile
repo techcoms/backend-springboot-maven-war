@@ -5,6 +5,7 @@ pipeline{
         NEXUS_VERSION = "nexus3"
         NEXUS_PROTOCOL = "http"
         NEXUS_URL = "13.235.62.16:8081"
+        NEXUS_REPOSITORY_URL = "http://13.235.62.16:8081/repository/maven-snapshots/"
         NEXUS_REPOSITORY = "maven-snapshots"
         NEXUS_CREDENTIAL_ID = "nexusrepo"
     }
@@ -85,3 +86,4 @@ pipeline{
         }
     }
 }
+
