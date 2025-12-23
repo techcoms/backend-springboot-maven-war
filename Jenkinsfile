@@ -23,17 +23,9 @@ pipeline {
 
         stage('Deploy to Tomcat') {
             steps {
-                sshagent(credentials: ['tomcat-ssh-key']) {
-                    sh '''
-                    ssh -o StrictHostKeyChecking=no ubuntu@172.31.27.49 sudo systemctl stop tomcat10
-                    ssh ubuntu@172.31.27.49 sudo rm -rf /var/lib/tomcat10/webapps/mavewebappdemo*
-                    scp target/*.war ubuntu@172.31.27.49:/tmp/
-                    ssh ubuntu@172.31.27.49 sudo mv /tmp/*.war /var/lib/tomcat10/webapps/
-                    ssh ubuntu@172.31.27.49 sudo chown tomcat:tomcat /var/lib/tomcat10/webapps/*.war
-                    ssh ubuntu@172.31.27.49 sudo systemctl start tomcat10
-                    '''
-                }
-            }
-        }
-    }
+                sh 'sudo cp **/target/mavewebappdemo-0.1.0-SNAPSHOT.war /var/lib/tomcat/webapps/my-app.war'
+             }
+          }
+      }
 }
+
