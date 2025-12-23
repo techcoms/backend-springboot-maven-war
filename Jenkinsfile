@@ -23,9 +23,16 @@ pipeline {
 
         stage('Deploy to Tomcat') {
             steps {
-                sh 'sudo cp **/target/mavewebappdemo-0.1.0-SNAPSHOT.war /var/lib/tomcat/webapps/my-app.war'
+                sh '''
+                    set -e
+                    sudo systemctl stop tomcat
+                    sudo cp target/mavewebappdemo-0.1.0-SNAPSHOT.war /var/lib/tomcat/webapps/my-app.war
+                    sudo chown tomcat:tomcat /var/lib/tomcat/webapps/my-app.war
+                    sudo systemctl start tomcat
+                '''
              }
           }
       }
 }
+
 
