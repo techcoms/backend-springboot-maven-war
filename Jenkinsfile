@@ -1,90 +1,39 @@
-pipeline{ 
+pipeline {
     agent any
-    environment {
-        DOCKERHUB_REPO = "techcoms/backend-springboot-maven-war"
-        NEXUS_VERSION = "nexus2"
-        NEXUS_PROTOCOL = "http"
-        NEXUS_URL = "13.235.62.16:8081"
-        NEXUS_REPOSITORY = "maven-snapshots"
-        NEXUS_CREDENTIAL_ID = "nexusrepo"
+
+    tools {
+        maven 'maven-3.9.11'
     }
-    tools{
-       maven"maven-3.9.11"
-    }
-    stages{
-       stage("git checkout"){
-            steps{
-                  git branch: 'Feature', credentialsId: 'github-creds',
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git branch: 'feature1',
+                    credentialsId: 'github-creds',
                     url: 'https://github.com/techcoms/backend-springboot-maven-war.git'
             }
         }
-        stage("build artifacts with maven"){
-            steps{
-                sh "mvn clean package"
+
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
             }
         }
-         stage("Publish to Nexus Repository ") {
+
+        stage('Deploy to Tomcat') {
             steps {
-                script{
-                    pom = readMavenPom file: "pom.xml";
-                    filesByGlob = findFiles(glob: "target/*.${pom.packaging}");
-                    echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
-                    artifactPath = filesByGlob[0].path;
-                    artifactExists = fileExists artifactPath;
-                    if(artifactExists) {
-                        echo "* File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}";
-                        nexusArtifactUploader(
-                            nexusVersion: NEXUS_VERSION,
-                            protocol: NEXUS_PROTOCOL,
-                            nexusUrl: NEXUS_URL,
-                            groupId: pom.groupId,
-                            version: pom.version,
-                            repository: NEXUS_REPOSITORY,
-                            credentialsId: NEXUS_CREDENTIAL_ID,
-                            artifacts: [
-                                [artifactId: pom.artifactId,
-                                classifier: '',
-                                file: artifactPath,
-                                type: pom.packaging],
-                                [artifactId: pom.artifactId,
-                                classifier: '',
-                                file: "pom.xml",
-                                type: "pom"]
-                            ]
-                        );
-                    } else {
-                        error "* File: ${artifactPath}, could not be found";
-                    }
+                sshagent(credentials: ['tomcat-ssh-key']) {
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no ubuntu@172.31.27.49 sudo systemctl stop tomcat10
+                    ssh ubuntu@172.31.27.49 sudo rm -rf /var/lib/tomcat10/webapps/mavewebappdemo*
+                    scp target/*.war ubuntu@172.31.27.49:/tmp/
+                    ssh ubuntu@172.31.27.49 sudo mv /tmp/*.war /var/lib/tomcat10/webapps/
+                    ssh ubuntu@172.31.27.49 sudo chown tomcat:tomcat /var/lib/tomcat10/webapps/*.war
+                    ssh ubuntu@172.31.27.49 sudo systemctl start tomcat10
+                    '''
                 }
             }
-        }
-        stage("build docker image"){
-            steps {
-                sh "docker build -t ${DOCKERHUB_REPO}:${BUILD_NUMBER} ."
-            }
-        }
-         stage('run a docker container'){
-                steps{
-                   sh "docker run -d -p 8083:8080 ${DOCKERHUB_REPO}:${BUILD_NUMBER}"
-                }
-          }
-        stage("login to dockerhub and push image"){
-            steps { 
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) { 
-                    sh "docker login -u $USERNAME -p $PASSWORD "
-                    sh "docker push ${DOCKERHUB_REPO}:${BUILD_NUMBER}"
-                      }
-                  }
-             }  
-        }
-     post{
-        changed{
-            mail to: "jyothiprakashg05@gmail.com",
-            subject: "jenkins build:${currentBuild.currentResult}: ${env.JOB_NAME}",
-            body: "${currentBuild.currentResult}: Job ${env.JOB_NAME}\nMore Info can be found here: ${env.BUILD_URL}"
         }
     }
 }
-
-
-
