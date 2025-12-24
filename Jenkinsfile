@@ -27,12 +27,13 @@ pipeline {
                 TOMCAT=/var/lib/tomcat10/webapps
 
                 sudo systemctl stop tomcat10
-                rm -rf $TOMCAT/myapp*
-                cp target/myapp.war $TOMCAT/
+                rm -rf $TOMCAT/*.war
+                cp target/*.war $TOMCAT/
                 sudo systemctl start tomcat10
                 '''
              }
           }
       }
 }
+
 
